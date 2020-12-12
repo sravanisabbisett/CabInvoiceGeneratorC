@@ -6,7 +6,7 @@ namespace CabInvoiceGeneerator
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("CabInvoice Generatorg");
+            Console.WriteLine("CabInvoice Generator");
         }
     }
 }

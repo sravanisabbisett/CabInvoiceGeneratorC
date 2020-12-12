@@ -39,5 +39,19 @@ namespace Tests
             double actulaFare = invoiceGenerator.CalculateFare(distance, time);
             Assert.AreEqual(expectedFare, actulaFare);
         }
+
+        /// <summary>
+        /// Givens the multiple rides should return total fare.
+        /// </summary>
+        [Test]
+        public void GivenMultipleRides_ShouldReturnTotalFare()
+        {
+            Ride[] rides = {new Ride(2.0,5),
+                            new Ride(0.2,1)};
+
+            double expectedFare = 30;
+            double actualFare = invoiceGenerator.CalculateTotalFare(rides);
+            Assert.AreEqual(expectedFare, actualFare);
+        }
     }
 }
