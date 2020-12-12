@@ -6,35 +6,88 @@ namespace CabInvoiceGeneerator
 {
     public class InvoiceGenerator
     {
-        public const double COST_PERKILOMETER = 10.0;
-        public const int COST_PERMINUTE = 1;
-        public const double MINIMUM_FARE = 5;
+        readonly int COST_PER_KM = 10;
+        readonly int COST_PER_MIN = 1;
+        readonly int MIN_FARE = 5;
+        double totalFare;
 
+        InvoiceSummary invoiceSummary = new InvoiceSummary();
+        RideRepositry rideRepository = new RideRepositry();
         /// <summary>
-        /// Calculates the fare of one ride
+        /// Default constructor
         /// </summary>
-        /// <param name="distance">The distance.</param>
-        /// <param name="time">The time.</param>
-        /// <returns></returns>
-        public double CalculateFare(double distance,int time)
+        public InvoiceGenerator()
         {
-            double totalFare = distance * COST_PERKILOMETER + time * COST_PERMINUTE;
-            return Math.Max(totalFare, MINIMUM_FARE);
         }
 
         /// <summary>
-        /// Calculates the total fare for multiple rides.
+        /// Calculate Fare for a single ride
         /// </summary>
-        /// <param name="rides">The rides.</param>
+        /// <param name="ride"></param>
         /// <returns></returns>
-        public InvoiceSummary CalculateTotalFare(Ride[] rides)
+        public double CalculateFare(Ride ride)
         {
-            double totalFare = 0;
-            foreach (Ride ride in rides)
+            if (ride == null)
             {
-                totalFare += this.CalculateFare(ride.distance, ride.time);
+                throw new InvoiceException(InvoiceException.ExceptionType.NULL_RIDES, "Ride is Invalid");
             }
-            return new InvoiceSummary(rides.Length, totalFare);
+            if (ride.distance <= 0)
+            {
+                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Distance is Invalid");
+            }
+            if (ride.time <= 0)
+            {
+                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_TIME, "Time is Invalid");
+            }
+
+            double fare = (ride.distance * COST_PER_KM) + (ride.time * COST_PER_MIN);
+            return Math.Max(fare, MIN_FARE);
+        }
+        /// <summary>
+        /// Calculate Fare For Multiple Rides
+        /// </summary>
+        /// <param name="rideList"></param>
+        /// <returns></returns>
+        public double CalculateFareForMultipleRides(List<Ride> rideList)
+        {
+            this.totalFare = 0;
+            foreach (var ride in rideList)
+            {
+                this.totalFare = totalFare + CalculateFare(ride);
+            }
+            return this.totalFare;
+        }
+        /// <summary>
+        /// Get Enhanced Invoice
+        /// </summary>
+        /// <param name="rideList"></param>
+        /// <returns></returns>
+        public InvoiceData GetInvoiceSummary(List<Ride> rideList)
+        {
+            double fare = CalculateFareForMultipleRides(rideList);
+            InvoiceData data = invoiceSummary.GetInvoice(rideList.Count, totalFare);
+            return data;
+        }
+
+        /// <summary>
+        /// Add rides to dictionary according to user id
+        /// </summary>
+        /// <param name="userId"></param>
+        public void AddRides(int userId, List<Ride> rideList)
+        {
+            rideRepository.Add(userId, rideList);
+        }
+
+        /// <summary>
+        /// Given user id get invoice
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public InvoiceData GetUserInvoice(int userId)
+        {
+            List<Ride> rideList = rideRepository.GetRides(userId);
+            InvoiceData data = GetInvoiceSummary(rideList);
+            return data;
         }
     }
 }

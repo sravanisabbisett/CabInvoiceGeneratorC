@@ -1,5 +1,6 @@
 using CabInvoiceGeneerator;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace Tests
 {
@@ -7,6 +8,7 @@ namespace Tests
     {
 
         InvoiceGenerator invoiceGenerator;
+        List<Ride> rideList;
 
         [SetUp]
         public void Setup()
@@ -14,44 +16,98 @@ namespace Tests
             invoiceGenerator = new InvoiceGenerator();
         }
 
-        /// <summary>
-        /// Givens the distance and time should calculate total fare.
-        /// </summary>
         [Test]
-        public void GivenDistanceAndTime_ShouldCalculateTotalFare()
+        public void GivenDistanceAndTime_Should_Return_Fare()
         {
-            double distance = 2.0;
-            int time = 5;
-            double expectedFare = 25;
-            double actualFare = invoiceGenerator.CalculateFare(distance, time);
-            Assert.AreEqual(expectedFare, actualFare);
+            double distance = 5; //in km
+            int time = 20;   //in minutes
+
+            double fare = invoiceGenerator.CalculateFare(new Ride(distance, time));
+
+            Assert.AreEqual(70, fare);
         }
 
-        /// <summary>
-        /// Givens the minimum distance and time should Return minimum fare.
-        /// </summary>
         [Test]
-        public void GivenMinimumDistanceAndTime_ShouldReturnMinimumFare()
+        public void GivenInvalidDistance_Should_Return_CabInvoiceException()
         {
-            double distance = 0.2;
-            int time = 1;
-            double expectedFare = 5;
-            double actulaFare = invoiceGenerator.CalculateFare(distance, time);
-            Assert.AreEqual(expectedFare, actulaFare);
+            double distance = -5; //in km
+            int time = 20;   //in minute
+
+            var exception = Assert.Throws<InvoiceException>(() => invoiceGenerator.CalculateFare(new Ride(distance, time)));
+
+            Assert.AreEqual(InvoiceException.ExceptionType.INVALID_DISTANCE, exception.exception);
+        }
+        [Test]
+        public void GivenInvalidTime_Should_Return_CabInvoiceException()
+        {
+            double distance = 5; //in km
+            int time = -20;   //in minute
+
+            var exception = Assert.Throws<InvoiceException>(() => invoiceGenerator.CalculateFare(new Ride(distance, time)));
+
+            Assert.AreEqual(InvoiceException.ExceptionType.INVALID_TIME, exception.exception);
+        }
+        [Test]
+        public void GivenListOfRides_Should_Return_TotalFare()
+        {
+            rideList = new List<Ride> { new Ride(5, 20), new Ride(3, 15), new Ride(2, 10) };
+
+            double fare = invoiceGenerator.CalculateFareForMultipleRides(rideList);
+
+            Assert.AreEqual(145, fare);
+
+        }
+        [Test]
+        public void GivenNullRides_Should_Return_CabInvoiceException()
+        {
+            rideList = new List<Ride> { new Ride(5, 20), null, new Ride(2, 10) };
+
+            var exception = Assert.Throws<InvoiceException>(() => invoiceGenerator.CalculateFareForMultipleRides(rideList));
+
+            Assert.AreEqual(InvoiceException.ExceptionType.NULL_RIDES, exception.exception);
+        }
+        [Test]
+        public void GivenListOfRides_Should_Return_InvoiceData()
+        {
+            rideList = new List<Ride> { new Ride(5, 20), new Ride(3, 15), new Ride(2, 10) };
+            double expectedFare = 145;
+            int expectedRides = 3;
+            double expectedAverage = expectedFare / expectedRides;
+
+            InvoiceData data = invoiceGenerator.GetInvoiceSummary(rideList);
+
+            Assert.IsTrue(data.noOfRides == expectedRides && data.totalFare == expectedFare && data.averageFare == expectedAverage);
+        }
+        [Test]
+        public void GivenNullRides_WhenAddingToDictionary_Should_Return_CabInvoiceException()
+        {
+            rideList = new List<Ride> { new Ride(5, 20), null, new Ride(2, 10) };
+
+            var exception = Assert.Throws<InvoiceException>(() => invoiceGenerator.AddRides(1, rideList));
+
+            Assert.AreEqual(InvoiceException.ExceptionType.NULL_RIDES, exception.exception);
+
+        }
+        [Test]
+        public void GivenUserId_WhenPresent_Should_Return_CabInvoiceSummary()
+        {
+            rideList = new List<Ride> { new Ride(5, 20), new Ride(3, 15), new Ride(2, 10) };
+            double expectedFare = 145;
+            int expectedRides = 3;
+            double expectedAverage = expectedFare / expectedRides;
+
+            invoiceGenerator.AddRides(1, rideList);
+            InvoiceData data = invoiceGenerator.GetUserInvoice(1);
+
+            Assert.IsTrue(data.noOfRides == expectedRides && data.totalFare == expectedFare && data.averageFare == expectedAverage);
+        }
+        [Test]
+        public void GivenUserId_WhenAbsent_Should_Return_CabInvoiceException()
+        {
+            var exception = Assert.Throws<InvoiceException>(() => invoiceGenerator.GetUserInvoice(1));
+
+            Assert.AreEqual(InvoiceException.ExceptionType.INVALID_USER_ID, exception.exception);
         }
 
-        /// <summary>
-        /// Givens the multiple rides should return total fare.
-        /// </summary>
-        [Test]
-        public void GivenMultipleRides_ShouldReturnTotalFare()
-        {
-            Ride[] rides = {new Ride(2.0,5),
-                            new Ride(0.2,1)};
-
-            InvoiceSummary invoiceSummary = invoiceGenerator.CalculateTotalFare(rides);
-            InvoiceSummary expectedInvoiceSummary = new InvoiceSummary(2, 30);
-            Assert.AreEqual(expectedInvoiceSummary, invoiceSummary);
-        }
     }
 }
