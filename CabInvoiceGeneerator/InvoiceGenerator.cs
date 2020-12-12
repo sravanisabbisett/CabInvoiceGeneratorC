@@ -27,14 +27,14 @@ namespace CabInvoiceGeneerator
         /// </summary>
         /// <param name="rides">The rides.</param>
         /// <returns></returns>
-        public double CalculateTotalFare(Ride[] rides)
+        public InvoiceSummary CalculateTotalFare(Ride[] rides)
         {
             double totalFare = 0;
             foreach (Ride ride in rides)
             {
                 totalFare += this.CalculateFare(ride.distance, ride.time);
             }
-            return totalFare;
+            return new InvoiceSummary(rides.Length, totalFare);
         }
     }
 }

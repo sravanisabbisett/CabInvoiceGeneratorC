@@ -49,9 +49,9 @@ namespace Tests
             Ride[] rides = {new Ride(2.0,5),
                             new Ride(0.2,1)};
 
-            double expectedFare = 30;
-            double actualFare = invoiceGenerator.CalculateTotalFare(rides);
-            Assert.AreEqual(expectedFare, actualFare);
+            InvoiceSummary invoiceSummary = invoiceGenerator.CalculateTotalFare(rides);
+            InvoiceSummary expectedInvoiceSummary = new InvoiceSummary(2, 30);
+            Assert.AreEqual(expectedInvoiceSummary, invoiceSummary);
         }
     }
 }
