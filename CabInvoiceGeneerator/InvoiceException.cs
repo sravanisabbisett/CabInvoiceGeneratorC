@@ -9,7 +9,7 @@ namespace CabInvoiceGeneerator
         //Enum constants for different type of exceptions
         public enum ExceptionType
         {
-            NULL_RIDES, INVALID_USER_ID, INVALID_DISTANCE, INVALID_TIME
+            NULL_RIDES, INVALID_USER_ID, INVALID_DISTANCE, INVALID_TIME, INVALID_RIDE_TYPE
         }
 
         public ExceptionType exception;
